@@ -1,6 +1,8 @@
 const { schema } = require("../models/bookModel");
 const mongoose = require("mongoose");
 const Book = mongoose.model('Book', schema);
+const dotenv = require("dotenv");
+dotenv.config();
 /**
  * 
  * @param {get all books data} req 
@@ -22,9 +24,9 @@ exports.add_books = async (req, res) => {
             categories
         } = req.body;
 
-        const bookExist = Book.find(b=> b.isbn === isbn);
-        if (bookExist)
-            return res.send('Book already exist');
+        // const bookExist = Book.find(b=> b.isbn === isbn);
+        // if (bookExist)
+        //     return res.send('Book already exist');
 
         let book = new Book({
             title,
@@ -53,18 +55,24 @@ exports.add_books = async (req, res) => {
  */
 exports.get_all = async (req, res) => {
     try {
-        const books = await Book.find();
-        // res.json(books);
-        const filters = req.query;
-        const filteredCategory = books.filter(category => {
-            let isValid = true;
-            for (key in filters) {
-                // console.log(key, category[key], filters[key]);
-                isValid = isValid && category[key] == filters[key];
-            }
-            return isValid;
-        })
-        res.send(filteredCategory);
+        let {key} = req.body;
+        if(key === process.env.SecretKey) {
+            const books = await Book.find();
+            // res.json(books);
+            const filters = req.query;
+            const filteredCategory = books.filter(category => {
+                let isValid = true;
+                for (key in filters) {
+                    // console.log(key, category[key], filters[key]);
+                    isValid = isValid && category[key] == filters[key];
+                }
+                return isValid;
+            })
+            res.send(filteredCategory);
+        } else {
+            res.status(400).json("UNAUTHORIZED")
+        }
+        
     } catch (err) {
         console.log(err);
         res.status(500).json({err});
